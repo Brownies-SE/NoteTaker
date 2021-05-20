@@ -44,7 +44,6 @@ app.post("/api/notes", function (req, res) {
     // reads the json file
     info = fs.readFileSync("./db/db.json", "utf8");
     console.log(info);
-
     // parse the data to get an array of objects
     info = JSON.parse(info);
     // Set new notes id
@@ -54,7 +53,9 @@ app.post("/api/notes", function (req, res) {
     // create a string so you can write it to the file
     info = JSON.stringify(info);
     // writes the new note to file
-    fs.writeFile("./db/db.json", info, "utf8", function (err) {});
+    fs.writeFile("./db/db.json", info, "utf8", function (err) {
+      if (err) throw err;
+    });
     // respond by sending everything to the browser and making it JSON format again
     res.json(JSON.parse(info));
   } catch (err) {
@@ -62,6 +63,25 @@ app.post("/api/notes", function (req, res) {
   }
 });
 
+app.delete("/api/notes/:id", function (req, res) {
+  //parse the data into an array of objects
+  let note = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
+  //search the url path and body
+  let noteId = req.params.id;
+  let newId = 0;
+  //current !== note
+  note = note.filter((currentNote) => {
+    return currentNote.id != noteId;
+  });
+  // Ids change after a note is deleted
+  for (currentNote of note) {
+    currentNote.id = newId.toString();
+    newId++;
+  }
+  //write the the new note to the file
+  fs.writeFileSync("./db/db.json", JSON.stringify(note));
+  res.json(note);
+});
 //Listen on PORT 8080
 app.listen(PORT, function (err) {
   if (err) console.log(err);
